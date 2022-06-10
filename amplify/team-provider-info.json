@@ -1,0 +1,23 @@
+{
+    "dev": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-supermanavcmtui-dev-212805-authRole",
+            "UnauthRoleArn": "arn:aws:iam::609587431462:role/amplify-supermanavcmtui-dev-212805-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::609587431462:role/amplify-supermanavcmtui-dev-212805-authRole",
+            "Region": "ap-south-1",
+            "DeploymentBucketName": "amplify-supermanavcmtui-dev-212805-deployment",
+            "UnauthRoleName": "amplify-supermanavcmtui-dev-212805-unauthRole",
+            "StackName": "amplify-supermanavcmtui-dev-212805",
+            "StackId": "arn:aws:cloudformation:ap-south-1:609587431462:stack/amplify-supermanavcmtui-dev-212805/376df080-e8d6-11ec-908b-062185a78c16",
+            "AmplifyAppId": "d2wo7w7bq4jf25"
+        },
+        "categories": {
+            "hosting": {
+                "amplifyhosting": {
+                    "appId": "d2wo7w7bq4jf25",
+                    "type": "cicd"
+                }
+            }
+        }
+    }
+}
