@@ -2,8 +2,36 @@
   "hosting": {
     "amplifyhosting": {
       "service": "amplifyhosting",
-      "type": "cicd",
-      "lastPushTimeStamp": "2022-06-10T16:39:00.514Z"
+      "providerPlugin": "awscloudformation",
+      "type": "manual"
+    }
+  },
+  "auth": {
+    "supermanavcmtui8faf36f7": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      }
     }
   }
 }
