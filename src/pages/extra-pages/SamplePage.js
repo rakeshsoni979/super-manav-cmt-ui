@@ -29,64 +29,129 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import MainCard from '../../components/MainCard';
 import { TextAreaField } from '@aws-amplify/ui-react';
-import { CONFIG_TYPES, formStyle } from './SamplePageConstants';
+import SwipeableViews from 'react-swipeable-views';
+import { useTheme } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { Auth } from 'aws-amplify';
+
+import { CONFIG_TYPES, formStyle, AWS_REGIONS } from './SamplePageConstants';
+import TabPanel from './tabPanel';
 
 const SamplePage = () => {
-  const [configuration, setConfiguration] = React.useState([]);
   const [appName, setAppName] = React.useState('');
   const [environment, setEnvironment] = React.useState('');
-  const [configType, setConfigType] = React.useState();
-  const [configKey, setConfigKey] = React.useState('');
-  const [configVal, setConfigVal] = React.useState('');
+  const [region, setRegion] = React.useState('ap-south-1');
+  const [configType, setConfigType] = React.useState(CONFIG_TYPES.KEY_VALUE);
+  const [configKey, setConfigKey] = React.useState('id');
+  const [configVal, setConfigVal] = React.useState('1');
+  const [configString, setConfigString] = React.useState('');
+
+  const [configurations, setConfigurations] = React.useState([]);
+  const [configTabs, setConfigTabs] = React.useState([{ name: 'Config 1' }]);
+
+  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTabIndex(newValue);
+  };
+
+  const handleChangeIndex = (index) => {
+    setActiveTabIndex(index);
+  };
 
   React.useEffect(() => {}, [configType]);
 
   const handleAppName = (event) => {
-    const selectedAppName = event.target.value;
-    setAppName(selectedAppName);
+    setAppName(event.target.value);
   };
 
-  const handleEnvChange = (event) => {
-    const selectedEnvChange = event.target.value;
-    setEnvironment(selectedEnvChange);
+  const handleEnvironmentChange = (event) => {
+    setEnvironment(event.target.value);
+  };
+
+  const handleRegionChange = (event) => {
+    setRegion(event.target.value);
   };
 
   const handleConfigTypeChange = (event) => {
-    const selectedType = event.target.value;
-    setConfigType(selectedType);
+    setConfigType(event.target.value);
   };
 
-  const handleAddConfig = () => {
+  const handleConfigString = (event) => {
+    setConfigString(event.target.value);
+  };
+
+  const handleAddProperty = () => {
     if (configKey && configVal) {
-      setConfiguration([...configuration, { key: configKey, value: configVal }]);
+      const newConfigs = [...configurations];
+      newConfigs[activeTabIndex] = newConfigs[activeTabIndex]
+        ? [...newConfigs[activeTabIndex], { key: configKey, value: configVal }]
+        : [{ key: configKey, value: configVal }];
+
+      console.log('Key-Value', newConfigs);
+
+      setConfigurations(newConfigs);
       setConfigKey('');
       setConfigVal('');
     }
   };
 
+  const handleAddConfigString = () => {
+    if (configString) {
+      const parsedConfig = configString.split(',').map((pro) => {
+        const temp = pro.split(':');
+        return { key: temp[0], value: temp[1] };
+      });
+
+      const newConfigs = [...configurations];
+      newConfigs[activeTabIndex] = newConfigs[activeTabIndex]
+        ? [...newConfigs[activeTabIndex], ...parsedConfig]
+        : [...parsedConfig];
+
+      setConfigurations(newConfigs);
+    }
+  };
+
   const handleDeleteConfig = ({ key }) => {
-    const cloneConf = [...configuration];
+    const cloneConf = [...configurations[activeTabIndex]];
     _.remove(cloneConf, (config) => {
       return config.key === key;
     });
-    setConfiguration(cloneConf);
+    const deepClone = [...configurations];
+    deepClone[activeTabIndex] = cloneConf;
+    setConfigurations(deepClone);
   };
 
-  const handleSendConfiguration = () => {
+  const handleAddMore = () => {
+    setConfigTabs([...configTabs, { name: `Config ${configTabs.length + 1}` }]);
+    setActiveTabIndex(configTabs.length);
+  };
+
+  const handleSendConfiguration = async () => {
+    const userInfo = await Auth.currentAuthenticatedUser();
+    console.log('userInfo', userInfo);
     const response = {
       applicationName: appName,
       env: environment,
-      createdBy: 'asingh',
-      historyConfig: [],
-      currentConfig: {
-        0: parseConfiguration(),
-      },
+      region,
+      createdBy: userInfo.username,
+      // historyConfig: [], // Don't send for create.
+      currentConfig: parseConfiguration(),
     };
+
     console.log('response', response);
   };
 
   const parseConfiguration = () => {
-    return _.mapValues(_.keyBy(configuration, 'key'), 'value');
+    const finalConfigs = {};
+    configurations.forEach((conf, seq) => {
+      finalConfigs[seq] = _.mapValues(_.keyBy(conf, 'key'), 'value');
+    });
+
+    return finalConfigs;
   };
 
   const handleKeyChange = (event) => {
@@ -94,6 +159,13 @@ const SamplePage = () => {
   };
   const handleValChange = (event) => {
     setConfigVal(event.target.value);
+  };
+
+  const a11yProps = (index) => {
+    return {
+      id: `full-width-tab-${index}`,
+      'aria-controls': `full-width-tabpanel-${index}`,
+    };
   };
 
   const renderConfigForm = () => {
@@ -118,8 +190,7 @@ const SamplePage = () => {
             />
             <Button
               variant="contained"
-              isFullWidth
-              onClick={handleAddConfig}
+              onClick={handleAddProperty}
               disabled={!configKey.trim() || !configVal.trim()}
             >
               Add Property
@@ -129,14 +200,22 @@ const SamplePage = () => {
       case CONFIG_TYPES.STRING:
         return (
           <Card>
-            <CardHeader>
-              <Button variant="contained" onClick={handleAddConfig} disabled={false}>
-                Add Property
-              </Button>
-            </CardHeader>
             <CardContent>
-              <TextAreaField label="String (Key:Value  & Comma Seperated)" margin="normal" />
+              <TextAreaField
+                value={configString}
+                onChange={handleConfigString}
+                label="String (Key:Value  & Comma Seperated)"
+                margin="normal"
+              />
             </CardContent>
+            <Button
+              sx={{ ml: 2, mb: 2 }}
+              variant="contained"
+              onClick={handleAddConfigString}
+              disabled={!configString.trim()}
+            >
+              Add Configuration
+            </Button>
           </Card>
         );
       default:
@@ -146,18 +225,35 @@ const SamplePage = () => {
 
   const renderGeneratedConfig = () => {
     return (
-      <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
+      <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography sx={{ mt: 2, mb: 2 }} variant="h5">
-              Generated Configuration(s)
-            </Typography>
-            {generateConfigItem()}
+          <Grid item xs={12} md={6} lg={6}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                margin: '8px 0',
+              }}
+            >
+              <Typography sx={{ mt: 2, mb: 2 }} variant="h5">
+                Generated Configuration(s)
+              </Typography>
+              <Button
+                sx={{ mt: 2 }}
+                variant="contained"
+                endIcon={<AddCircleIcon />}
+                onClick={handleAddMore}
+              >
+                Add More Configurations
+              </Button>
+            </div>
+            {renderConfigTabs()}
             <Button
               sx={{ mt: 2 }}
               variant="contained"
               endIcon={<SendIcon />}
-              disabled={!configuration.length}
+              disabled={!configurations.length}
               onClick={handleSendConfiguration}
             >
               Send
@@ -172,7 +268,7 @@ const SamplePage = () => {
     return (
       <TableContainer component={Paper}>
         <Table size="small">
-          <TableHead style={{ background: '#1890ff' }}>
+          <TableHead style={{ background: '#f0f0f0' }}>
             <TableRow
               sx={{
                 '& td, & th': { padding: '8px 16px' },
@@ -186,31 +282,34 @@ const SamplePage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {!!(configuration && configuration.length) ? (
-              configuration.map((config) => (
-                <TableRow
-                  key={config.key}
-                  sx={{
-                    '& td, & th': { padding: '0 16px' },
-                    '&:last-child td, &:last-child th': 0,
-                  }}
-                >
-                  <TableCell component="th" scope="row">
-                    {config.key}
-                  </TableCell>
-                  <TableCell align="left">{config.value}</TableCell>
-                  <TableCell align="right">
-                    <IconButton aria-label="edit" disabled>
-                      <EditIcon />
-                    </IconButton>
-                  </TableCell>
-                  <TableCell align="left">
-                    <IconButton aria-label="delete" onClick={() => handleDeleteConfig(config)}>
-                      <DeleteIcon color="error" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+            {!!(configurations[activeTabIndex] && configurations[activeTabIndex].length) ? (
+              configurations[activeTabIndex].map((config, ind) => {
+                console.log('configurations[activeTabIndex]', configurations[activeTabIndex]);
+                return (
+                  <TableRow
+                    key={`${config.key}${ind}`}
+                    sx={{
+                      '& td, & th': { padding: '0 16px' },
+                      '&:last-child td, &:last-child th': 0,
+                    }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {config.key}
+                    </TableCell>
+                    <TableCell align="left">{config.value}</TableCell>
+                    <TableCell align="right">
+                      <IconButton aria-label="edit" disabled>
+                        <EditIcon />
+                      </IconButton>
+                    </TableCell>
+                    <TableCell align="left">
+                      <IconButton aria-label="delete" onClick={() => handleDeleteConfig(config)}>
+                        <DeleteIcon color="error" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell align="center" colSpan={4}>
@@ -224,9 +323,61 @@ const SamplePage = () => {
     );
   };
 
+  const renderConfigTabs = () => {
+    return (
+      <div>
+        <AppBar position="static">
+          <Tabs
+            value={activeTabIndex}
+            onChange={handleTabChange}
+            indicatorColor="secondary"
+            textColor="inherit"
+            variant="fullWidth"
+            aria-label="full width tabs example"
+          >
+            {configTabs.map((ct, ci) => {
+              return <Tab label={`${ct.name}`} {...a11yProps(ci)} />;
+            })}
+          </Tabs>
+        </AppBar>
+        <SwipeableViews axis={'x'} index={activeTabIndex} onChangeIndex={handleChangeIndex}>
+          {configTabs.map((ct, ci) => {
+            return (
+              <TabPanel value={activeTabIndex} index={ci}>
+                {generateConfigItem()}
+              </TabPanel>
+            );
+          })}
+        </SwipeableViews>
+      </div>
+    );
+  };
+
   return (
     <MainCard title="Configuration System">
-      <Stack spacing={2} sx={{ width: 300 }}>
+      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+        <FormControl sx={{ width: '300px' }}>
+          <InputLabel id="demo-simple-select-label">Region</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            required
+            value={region}
+            label="Region"
+            onChange={handleRegionChange}
+          >
+            {AWS_REGIONS.map((r) => {
+              return (
+                <MenuItem key={r.value} value={r.value}>
+                  {r.label}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </FormControl>
+      </div>
+      <hr />
+      <Stack spacing={2}>
         <FormControl>
           <TextField
             required
@@ -246,7 +397,7 @@ const SamplePage = () => {
             required
             value={environment}
             label="Environment"
-            onChange={handleEnvChange}
+            onChange={handleEnvironmentChange}
           >
             <MenuItem value={'ftr'}>Feature</MenuItem>
             <MenuItem value={'qat'}>Testing</MenuItem>
