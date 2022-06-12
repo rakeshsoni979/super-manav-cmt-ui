@@ -36,7 +36,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { Auth } from 'aws-amplify';
-import { DASH_BOARD_URL, getConfig } from '../extra-pages/api';
+import { DASH_BOARD_URL } from '../extra-pages/api';
 import axios from 'axios';
 import EditConfig from '../extra-pages/editConfig';
 

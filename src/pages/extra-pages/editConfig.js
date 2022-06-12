@@ -39,7 +39,7 @@ import { Auth } from 'aws-amplify';
 
 import { CONFIG_TYPES, formStyle, AWS_REGIONS, API_STATUS } from './SamplePageConstants';
 import TabPanel from './tabPanel';
-import { getConfig, updateConfig } from './api';
+import { updateConfig } from './api';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
@@ -114,10 +114,6 @@ const EditConfig = (props) => {
     setActiveTabIndex(index);
   };
 
-  React.useEffect(() => {
-    getConfig();
-  }, []);
-
   const handleConfigTypeChange = (event) => {
     setConfigType(event.target.value);
   };
@@ -184,7 +180,6 @@ const EditConfig = (props) => {
       lastUpdatedBy: userInfo.username,
       applicationName: appName,
       env: environment,
-      region,
       currentConfig: parseConfiguration(),
     };
 

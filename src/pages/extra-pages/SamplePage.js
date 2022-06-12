@@ -36,10 +36,16 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { Auth } from 'aws-amplify';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 import { CONFIG_TYPES, formStyle, AWS_REGIONS } from './SamplePageConstants';
 import TabPanel from './tabPanel';
-import { getConfig, saveConfig } from './api';
+import { saveConfig } from './api';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const SamplePage = () => {
   const [appName, setAppName] = React.useState('');
@@ -55,6 +61,19 @@ const SamplePage = () => {
 
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
 
+  // ===== ALERT STATES =======
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+  // ===== ALERT STATES =======
+
   const handleTabChange = (event, newValue) => {
     setActiveTabIndex(newValue);
   };
@@ -62,10 +81,6 @@ const SamplePage = () => {
   const handleChangeIndex = (index) => {
     setActiveTabIndex(index);
   };
-
-  React.useEffect(() => {
-    getConfig();
-  }, []);
 
   const handleAppName = (event) => {
     setAppName(event.target.value);
@@ -432,6 +447,11 @@ const SamplePage = () => {
       </Stack>
       {configType && renderConfigForm()}
       {configType && renderGeneratedConfig()}
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+          Connfigurations has been updated successfully!!!
+        </Alert>
+      </Snackbar>
     </MainCard>
   );
 };

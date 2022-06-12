@@ -38,18 +38,154 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { Auth } from 'aws-amplify';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import PreviewIcon from '@mui/icons-material/Preview';
+import SaveAltIcon from '@mui/icons-material/SaveAlt';
+import { getConfigVersion, updateConfig } from './api';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const VersionPage = () => {
+  const [appId, setAppId] = React.useState('62a4f72977979a833c3dfe87');
+  const [data, setData] = React.useState();
+  const [versionData, setVersionData] = React.useState();
+  const [selectedVersion, setSelectedVersion] = React.useState();
+
+  // ===== ALERT STATES =======
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+  // ===== ALERT STATES =======
+
+  const handleFetch = async () => {
+    const response = await getConfigVersion(appId);
+    console.log('response', response.data);
+    setData(response.data);
+  };
+
+  const handleVersionApply = async (versionIndex) => {
+    const userInfo = await Auth.currentAuthenticatedUser();
+    const idToken = userInfo.signInUserSession.accessToken.jwtToken;
+    const { _id } = data;
+
+    const versionResponse = {
+      _id,
+      lastUpdatedBy: userInfo.username,
+      applicationName: data.applicationName,
+      env: data.env,
+      currentConfig: data.historyConfig[versionIndex],
+    };
+
+    const resp = await updateConfig(versionResponse, idToken);
+    console.log('version resp', resp);
+    if (resp.status === 200) {
+      setOpen(true);
+    }
+  };
+
   return (
     <MainCard title="Edit Configuration">
       <Stack spacing={2}>
         <FormControl>
-          <TextField label="App Id" />
+          <TextField
+            label="App Id"
+            value={appId}
+            onChange={(event) => setAppId(event.target.value)}
+          />
         </FormControl>
-        <FormControl>
-          <TextField label="Region" />
-        </FormControl>
+        <Button variant="contained" onClick={handleFetch} disabled={!appId}>
+          Fetch Config
+        </Button>
       </Stack>
+      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
+        <Grid item xs={12} sx={{ mb: -2.25 }}>
+          {data && (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table size="small">
+                <TableHead style={{ background: '#f0f0f0' }}>
+                  <TableRow
+                    sx={{
+                      '& td, & th': { padding: '8px 16px' },
+                    }}
+                  >
+                    <TableCell>Application Name</TableCell>
+                    <TableCell>Environment</TableCell>
+                    <TableCell>Region</TableCell>
+                    <TableCell>Created By</TableCell>
+                    <TableCell>Version(s)</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {!!(data && data.historyConfig.length) ? (
+                    data.historyConfig.map((hc, ind) => {
+                      return (
+                        <TableRow
+                          key={`${hc.key}${ind}`}
+                          sx={{
+                            '& td, & th': { padding: '0 16px' },
+                            '&:last-child td, &:last-child th': 0,
+                          }}
+                        >
+                          <TableCell component="th" scope="row">
+                            {data.applicationName}
+                          </TableCell>
+                          <TableCell>{data.env}</TableCell>
+                          <TableCell>{data.region}</TableCell>
+                          <TableCell>{data.createdBy}</TableCell>
+                          <TableCell>{`Version ${ind}`}</TableCell>
+                          <TableCell align="center">
+                            <IconButton aria-label="edit" onClick={() => setVersionData(hc)}>
+                              <PreviewIcon color="success" />
+                            </IconButton>
+                            <Button
+                              variant="contained"
+                              aria-label="edit"
+                              size="small"
+                              onClick={() => handleVersionApply(ind)}
+                            >
+                              Apply
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell align="center" colSpan={5}>
+                        Nothing to show :)
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Grid>
+        {versionData && (
+          <Grid item xs={12} sx={{ mb: -2.25 }}>
+            <pre style={{ background: '#f0f0f0' }}>{JSON.stringify(versionData, null, 2)}</pre>
+          </Grid>
+        )}
+      </Grid>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+          Connfigurations has been updated successfully!!!
+        </Alert>
+      </Snackbar>
     </MainCard>
   );
 };
