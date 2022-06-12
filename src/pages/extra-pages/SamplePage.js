@@ -163,8 +163,10 @@ const SamplePage = () => {
       // historyConfig: [], // Don't send for create.
       currentConfig: parseConfiguration(),
     };
-    saveConfig(response);
-    // console.log('response', response);
+    const resp = await saveConfig(response);
+    if (resp.status === 200) {
+      setOpen(true);
+    }
   };
 
   const parseConfiguration = () => {
@@ -447,9 +449,14 @@ const SamplePage = () => {
       </Stack>
       {configType && renderConfigForm()}
       {configType && renderGeneratedConfig()}
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
         <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-          Connfigurations has been updated successfully!!!
+          Configuration has been Added successfully!!!
         </Alert>
       </Snackbar>
     </MainCard>

@@ -81,6 +81,7 @@ const VersionPage = () => {
       lastUpdatedBy: userInfo.username,
       applicationName: data.applicationName,
       env: data.env,
+      region: data.region,
       currentConfig: data.historyConfig[versionIndex],
     };
 
@@ -92,7 +93,7 @@ const VersionPage = () => {
   };
 
   return (
-    <MainCard title="Edit Configuration">
+    <MainCard title="Rollback Configuration">
       <Stack spacing={2}>
         <FormControl>
           <TextField
@@ -171,7 +172,7 @@ const VersionPage = () => {
           )}
         </Grid>
         {versionData && (
-          <Grid item xs={12} sx={{ mb: -2.25 }}>
+          <Grid item xs={12} sx={{ mb: -1.25 }}>
             <pre style={{ background: '#f0f0f0' }}>{JSON.stringify(versionData, null, 2)}</pre>
           </Grid>
         )}
@@ -183,7 +184,7 @@ const VersionPage = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-          Connfigurations has been updated successfully!!!
+          Configuration version has been applied successfully!!!
         </Alert>
       </Snackbar>
     </MainCard>

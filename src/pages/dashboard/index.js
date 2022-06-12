@@ -48,13 +48,15 @@ const DashboardDefault = ({ signOut, user }) => {
 
   React.useEffect(async () => {
     const response = await axios.get(`${DASH_BOARD_URL}?region=ap-south-1`);
-    console.log('response', response.data);
     setData(response.data);
   }, []);
 
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       <Grid item xs={12} sx={{ mb: -2.25 }}>
+        <Typography variant="h4" sx={{ mb: 1 }}>
+          Configuration List
+        </Typography>
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead style={{ background: '#f0f0f0' }}>

@@ -180,6 +180,7 @@ const EditConfig = (props) => {
       lastUpdatedBy: userInfo.username,
       applicationName: appName,
       env: environment,
+      region,
       currentConfig: parseConfiguration(),
     };
 
@@ -392,9 +393,14 @@ const EditConfig = (props) => {
 
   return (
     <MainCard title="Edit Configuration">
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
         <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-          Connfigurations has been updated successfully!!!
+          Configuration has been updated successfully!!!
         </Alert>
       </Snackbar>
       <Typography variant="h6" color={'gray'}>
