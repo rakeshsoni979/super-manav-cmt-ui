@@ -39,24 +39,83 @@ import { Auth } from 'aws-amplify';
 import { DASH_BOARD_URL } from '../extra-pages/api';
 import axios from 'axios';
 import EditConfig from '../extra-pages/editConfig';
+import Modal from 'react-modal';
+import ShowReadCreatepopUp from '../../components/showPopUp/showReadCreatepopUp';
 
 // ==============================|| DASHBOARD - DEFAULT ||============================== //
+
+Modal.setAppElement('#root');
+
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding: '30px',
+  },
+};
 
 const DashboardDefault = ({ signOut, user }) => {
   const [data, setData] = React.useState([]);
   const [editingData, setEditingData] = React.useState(null);
+  const [userDetails, setUserDetails] = React.useState('');
 
   React.useEffect(async () => {
     const response = await axios.get(`${DASH_BOARD_URL}?region=ap-south-1`);
     setData(response.data);
+    const userInfo = await Auth.currentAuthenticatedUser();
+    setUserDetails(userInfo);
   }, []);
+
+  const [modalIsOpen, setIsOpen] = React.useState(false);
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  function afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    // subtitle.style.color = '#f00';
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+  }
 
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       <Grid item xs={12} sx={{ mb: -2.25 }}>
-        <Typography variant="h4" sx={{ mb: 1 }}>
-          Configuration List
-        </Typography>
+        <Modal
+          isOpen={modalIsOpen}
+          onAfterOpen={afterOpenModal}
+          onRequestClose={closeModal}
+          style={customStyles}
+          contentLabel="Example Modal"
+        >
+          <ShowReadCreatepopUp
+            region={'ap-south-1'}
+            closeModalPopUp={closeModal}
+            userDetails={userDetails}
+          ></ShowReadCreatepopUp>
+        </Modal>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            Configuration List
+          </Typography>
+          <FormControl sx={{ width: '250px' }}>
+            <Button
+              variant="contained"
+              size="small"
+              endIcon={<AddCircleIcon />}
+              onClick={openModal}
+            >
+              Request Access
+            </Button>
+          </FormControl>
+        </div>
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead style={{ background: '#f0f0f0' }}>

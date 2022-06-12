@@ -42,10 +42,24 @@ import MuiAlert from '@mui/material/Alert';
 import { CONFIG_TYPES, formStyle, AWS_REGIONS } from './SamplePageConstants';
 import TabPanel from './tabPanel';
 import { saveConfig } from './api';
+import Modal from 'react-modal';
+import ShowUpdateDeletePopUp from '../../components/showPopUp/showUpdateDeletePopUp';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+Modal.setAppElement('#root');
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding: '30px',
+  },
+};
 
 const SamplePage = () => {
   const [appName, setAppName] = React.useState('');
@@ -55,11 +69,32 @@ const SamplePage = () => {
   const [configKey, setConfigKey] = React.useState('id');
   const [configVal, setConfigVal] = React.useState('1');
   const [configString, setConfigString] = React.useState('');
+  const [userDetails, setUserDetails] = React.useState('');
 
   const [configurations, setConfigurations] = React.useState([]);
   const [configTabs, setConfigTabs] = React.useState([{ name: 'Config 1' }]);
 
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const [modalIsOpen, setIsOpen] = React.useState(false);
+
+  React.useEffect(async () => {
+    const userInfo = await Auth.currentAuthenticatedUser();
+    setUserDetails(userInfo);
+  }, []);
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  function afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    // subtitle.style.color = '#f00';
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+  }
 
   // ===== ALERT STATES =======
 
@@ -153,13 +188,11 @@ const SamplePage = () => {
 
     console.log('configTabs', configTabs);
 
-    const userInfo = await Auth.currentAuthenticatedUser();
-    console.log('userInfo', userInfo);
     const response = {
       applicationName: appName,
       env: environment,
       region,
-      createdBy: userInfo.username,
+      createdBy: userDetails.username,
       // historyConfig: [], // Don't send for create.
       currentConfig: parseConfiguration(),
     };
@@ -308,7 +341,6 @@ const SamplePage = () => {
           <TableBody>
             {!!(configurations[activeTabIndex] && configurations[activeTabIndex].length) ? (
               configurations[activeTabIndex].map((config, ind) => {
-                console.log('configurations[activeTabIndex]', configurations[activeTabIndex]);
                 return (
                   <TableRow
                     key={`${config.key}${ind}`}
@@ -360,14 +392,14 @@ const SamplePage = () => {
             aria-label="full width tabs example"
           >
             {configTabs.map((ct, ci) => {
-              return <Tab label={`${ct.name}`} {...a11yProps(ci)} />;
+              return <Tab key={ct.name} label={`${ct.name}`} {...a11yProps(ci)} />;
             })}
           </Tabs>
         </AppBar>
         <SwipeableViews axis={'x'} index={activeTabIndex} onChangeIndex={handleChangeIndex}>
           {configTabs.map((ct, ci) => {
             return (
-              <TabPanel value={activeTabIndex} index={ci}>
+              <TabPanel key={ct.name} value={activeTabIndex} index={ci}>
                 {generateConfigItem()}
               </TabPanel>
             );
@@ -377,9 +409,29 @@ const SamplePage = () => {
     );
   };
 
+  const renderModal = () => {
+    return (
+      <Modal
+        isOpen={modalIsOpen}
+        onAfterOpen={afterOpenModal}
+        onRequestClose={closeModal}
+        style={customStyles}
+        contentLabel="Example Modal"
+      >
+        <ShowUpdateDeletePopUp
+          region={region}
+          closeModalPopUp={closeModal}
+          userDetails={userDetails}
+        ></ShowUpdateDeletePopUp>
+      </Modal>
+    );
+  };
+
   return (
     <MainCard title="Configuration System">
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '10px' }}
+      >
         <FormControl sx={{ width: '300px' }}>
           <InputLabel id="demo-simple-select-label">Region</InputLabel>
           <Select
@@ -399,6 +451,12 @@ const SamplePage = () => {
             })}
           </Select>
         </FormControl>
+        <FormControl sx={{ width: '150px' }}>
+          <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
+            Add Access
+          </Button>
+        </FormControl>
+        {renderModal()}
       </div>
       <hr />
       <Stack spacing={2}>
