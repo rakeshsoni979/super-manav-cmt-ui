@@ -37,23 +37,74 @@ import Tab from '@mui/material/Tab';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { Auth } from 'aws-amplify';
 
-import { CONFIG_TYPES, formStyle, AWS_REGIONS } from './SamplePageConstants';
+import { CONFIG_TYPES, formStyle, AWS_REGIONS, API_STATUS } from './SamplePageConstants';
 import TabPanel from './tabPanel';
-import { getConfig, saveConfig } from './api';
+import { getConfig, updateConfig } from './api';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
-const SamplePage = () => {
-  const [appName, setAppName] = React.useState('');
-  const [environment, setEnvironment] = React.useState('');
-  const [region, setRegion] = React.useState('ap-south-1');
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
+const EditConfig = (props) => {
+  const { editConfigData } = props;
+
+  const [appName, setAppName] = React.useState(null);
+  const [environment, setEnvironment] = React.useState(null);
+  const [region, setRegion] = React.useState(null);
   const [configType, setConfigType] = React.useState(CONFIG_TYPES.KEY_VALUE);
-  const [configKey, setConfigKey] = React.useState('id');
-  const [configVal, setConfigVal] = React.useState('1');
+
+  const [configKey, setConfigKey] = React.useState('');
+  const [configVal, setConfigVal] = React.useState('');
   const [configString, setConfigString] = React.useState('');
+  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
 
   const [configurations, setConfigurations] = React.useState([]);
-  const [configTabs, setConfigTabs] = React.useState([{ name: 'Config 1' }]);
+  const [configTabs, setConfigTabs] = React.useState([]);
+  const [editStatus, setEditStatus] = React.useState();
 
-  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+  // ===== ALERT STATES =======
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+  // ===== ALERT STATES =======
+
+  React.useEffect(() => {
+    if (editConfigData) {
+      const { applicationName, env, region, currentConfig } = editConfigData;
+      setRegion(region);
+      setAppName(applicationName);
+      setEnvironment(env);
+
+      if (currentConfig) {
+        const configTabsName = Object.keys(currentConfig).map((d, index) => {
+          return { name: `Config ${index + 1}` };
+        });
+        setConfigTabs(configTabsName);
+
+        const tempConfig = [];
+        Object.values(currentConfig).map((tabdata) => {
+          tempConfig.push(tabdata);
+        });
+
+        const finalConfig = tempConfig.map((confg) => {
+          return Object.keys(confg).map((key) => {
+            return { key, value: confg[key] };
+          });
+        });
+
+        setConfigurations(finalConfig);
+      }
+    }
+  }, [editConfigData]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTabIndex(newValue);
@@ -66,18 +117,6 @@ const SamplePage = () => {
   React.useEffect(() => {
     getConfig();
   }, []);
-
-  const handleAppName = (event) => {
-    setAppName(event.target.value);
-  };
-
-  const handleEnvironmentChange = (event) => {
-    setEnvironment(event.target.value);
-  };
-
-  const handleRegionChange = (event) => {
-    setRegion(event.target.value);
-  };
 
   const handleConfigTypeChange = (event) => {
     setConfigType(event.target.value);
@@ -93,8 +132,6 @@ const SamplePage = () => {
       newConfigs[activeTabIndex] = newConfigs[activeTabIndex]
         ? [...newConfigs[activeTabIndex], { key: configKey, value: configVal }]
         : [{ key: configKey, value: configVal }];
-
-      console.log('Key-Value', newConfigs);
 
       setConfigurations(newConfigs);
       setConfigKey('');
@@ -118,13 +155,17 @@ const SamplePage = () => {
     }
   };
 
-  const handleDeleteConfig = ({ key }) => {
+  const handleEditProperty = (editProp) => {
+    const { key } = editProp;
     const cloneConf = [...configurations[activeTabIndex]];
-    _.remove(cloneConf, (config) => {
+    const removedConfig = _.remove(cloneConf, (config) => {
       return config.key === key;
     });
+
     const deepClone = [...configurations];
     deepClone[activeTabIndex] = cloneConf;
+    setConfigKey(removedConfig[0].key);
+    setConfigVal(removedConfig[0].value);
     setConfigurations(deepClone);
   };
 
@@ -134,22 +175,24 @@ const SamplePage = () => {
   };
 
   const handleSendConfiguration = async () => {
-    console.log('configurations', configurations);
-
-    console.log('configTabs', configTabs);
-
     const userInfo = await Auth.currentAuthenticatedUser();
-    console.log('userInfo', userInfo);
-    const response = {
+    const idToken = userInfo.signInUserSession.accessToken.jwtToken;
+    const { _id } = editConfigData;
+
+    const updateResponse = {
+      _id,
+      lastUpdatedBy: userInfo.username,
       applicationName: appName,
       env: environment,
       region,
-      createdBy: userInfo.username,
-      // historyConfig: [], // Don't send for create.
       currentConfig: parseConfiguration(),
     };
-    saveConfig(response);
-    // console.log('response', response);
+
+    const resp = await updateConfig(updateResponse, idToken);
+    if (resp.status === 200) {
+      setEditStatus(API_STATUS.SUCCESS);
+      setOpen(true);
+    }
   };
 
   const parseConfiguration = () => {
@@ -283,15 +326,12 @@ const SamplePage = () => {
             >
               <TableCell>Key</TableCell>
               <TableCell align="left">Value</TableCell>
-              <TableCell align="center" colSpan={2}>
-                Actions
-              </TableCell>
+              <TableCell align="center">Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {!!(configurations[activeTabIndex] && configurations[activeTabIndex].length) ? (
               configurations[activeTabIndex].map((config, ind) => {
-                console.log('configurations[activeTabIndex]', configurations[activeTabIndex]);
                 return (
                   <TableRow
                     key={`${config.key}${ind}`}
@@ -304,14 +344,9 @@ const SamplePage = () => {
                       {config.key}
                     </TableCell>
                     <TableCell align="left">{config.value}</TableCell>
-                    <TableCell align="right">
-                      <IconButton aria-label="edit" disabled>
+                    <TableCell align="center">
+                      <IconButton aria-label="edit" onClick={() => handleEditProperty(config)}>
                         <EditIcon />
-                      </IconButton>
-                    </TableCell>
-                    <TableCell align="left">
-                      <IconButton aria-label="delete" onClick={() => handleDeleteConfig(config)}>
-                        <DeleteIcon color="error" />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -361,56 +396,23 @@ const SamplePage = () => {
   };
 
   return (
-    <MainCard title="Configuration System">
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <FormControl sx={{ width: '300px' }}>
-          <InputLabel id="demo-simple-select-label">Region</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            required
-            value={region}
-            label="Region"
-            onChange={handleRegionChange}
-          >
-            {AWS_REGIONS.map((r) => {
-              return (
-                <MenuItem key={r.value} value={r.value}>
-                  {r.label}
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
-      </div>
+    <MainCard title="Edit Configuration">
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
+          Connfigurations has been updated successfully!!!
+        </Alert>
+      </Snackbar>
+      <Typography variant="h6" color={'gray'}>
+        Region - {region}
+      </Typography>
+      <Typography variant="h6" color={'gray'}>
+        Application Name - {appName}
+      </Typography>
+      <Typography variant="h6" color={'gray'}>
+        Environment - {environment}
+      </Typography>
       <hr />
       <Stack spacing={2}>
-        <FormControl>
-          <TextField
-            required
-            id="outlined-basic"
-            label="Application Name"
-            variant="outlined"
-            margin="normal"
-            value={appName}
-            onChange={handleAppName}
-          />
-        </FormControl>
-        <FormControl>
-          <InputLabel id="demo-simple-select-label">Environment</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            required
-            value={environment}
-            label="Environment"
-            onChange={handleEnvironmentChange}
-          >
-            <MenuItem value={'ftr'}>Feature</MenuItem>
-            <MenuItem value={'qat'}>Testing</MenuItem>
-            <MenuItem value={'prod'}>Production</MenuItem>
-          </Select>
-        </FormControl>
         <FormControl>
           <FormLabel id="demo-row-radio-buttons-group-label">Configuration Type</FormLabel>
           <RadioGroup
@@ -436,4 +438,4 @@ const SamplePage = () => {
   );
 };
 
-export default SamplePage;
+export default EditConfig;

@@ -35,3 +35,10 @@ export const AWS_REGIONS = [
   { value: 'us-west-1', label: 'US West(N. California) (us-west-1)' },
   { value: 'us-west-2', label: 'US West(Oregon) (us-west-2)' },
 ];
+
+export const API_BASE_URL = 'https://b7e0-2401-4900-1c3c-177-9cb-bd8a-7934-6474.in.ngrok.io';
+
+export const API_STATUS = {
+  SUCCESS: 'success',
+  FAIL: 'fail',
+};

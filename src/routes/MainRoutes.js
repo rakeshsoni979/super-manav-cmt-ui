@@ -9,6 +9,7 @@ const DashboardDefault = Loadable(lazy(() => import('../pages/dashboard')));
 
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('../pages/extra-pages/SamplePage')));
+const VersionPage = Loadable(lazy(() => import('../pages/extra-pages/VersionPage')));
 
 // render - utilities
 const Typography = Loadable(lazy(() => import('../pages/components-overview/Typography')));
@@ -42,6 +43,10 @@ const MainRoutes = {
     {
       path: 'sample-page',
       element: <SamplePage />,
+    },
+    {
+      path: 'version-page',
+      element: <VersionPage />,
     },
     {
       path: 'shadow',

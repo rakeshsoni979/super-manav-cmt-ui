@@ -21,6 +21,13 @@ const support = {
       url: '/sample-page',
       icon: icons.ChromeOutlined,
     },
+    {
+      id: 'version-page',
+      title: 'Configuration Versioning',
+      type: 'item',
+      url: '/version-page',
+      icon: icons.ChromeOutlined,
+    },
   ],
 };
 
