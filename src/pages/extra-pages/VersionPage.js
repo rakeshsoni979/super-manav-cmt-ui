@@ -73,7 +73,7 @@ const VersionPage = () => {
 
   const handleVersionApply = async (versionIndex) => {
     const userInfo = await Auth.currentAuthenticatedUser();
-    const idToken = userInfo.signInUserSession.accessToken.jwtToken;
+    const idToken = userInfo.signInUserSession.idToken.jwtToken;
     const { _id } = data;
 
     const versionResponse = {

@@ -67,12 +67,20 @@ const EditConfig = (props) => {
   // ===== ALERT STATES =======
 
   const [open, setOpen] = React.useState(false);
+  const [openError, setOpenError] = React.useState(false);
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
     setOpen(false);
+  };
+
+  const handleErrorClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenError(false);
   };
 
   // ===== ALERT STATES =======
@@ -172,7 +180,7 @@ const EditConfig = (props) => {
 
   const handleSendConfiguration = async () => {
     const userInfo = await Auth.currentAuthenticatedUser();
-    const idToken = userInfo.signInUserSession.accessToken.jwtToken;
+    const idToken = userInfo.signInUserSession.idToken.jwtToken;
     const { _id } = editConfigData;
 
     const updateResponse = {
@@ -185,7 +193,11 @@ const EditConfig = (props) => {
     };
 
     const resp = await updateConfig(updateResponse, idToken);
-    if (resp.status === 200) {
+    console.log('resp', resp);
+
+    if (resp.data.error) {
+      setOpenError(true);
+    } else if (resp.status === 200) {
       setEditStatus(API_STATUS.SUCCESS);
       setOpen(true);
     }
@@ -374,14 +386,14 @@ const EditConfig = (props) => {
             aria-label="full width tabs example"
           >
             {configTabs.map((ct, ci) => {
-              return <Tab label={`${ct.name}`} {...a11yProps(ci)} />;
+              return <Tab key={ct.name} label={`${ct.name}`} {...a11yProps(ci)} />;
             })}
           </Tabs>
         </AppBar>
         <SwipeableViews axis={'x'} index={activeTabIndex} onChangeIndex={handleChangeIndex}>
           {configTabs.map((ct, ci) => {
             return (
-              <TabPanel value={activeTabIndex} index={ci}>
+              <TabPanel key={ct.name} value={activeTabIndex} index={ci}>
                 {generateConfigItem()}
               </TabPanel>
             );
@@ -401,6 +413,16 @@ const EditConfig = (props) => {
       >
         <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
           Configuration has been updated successfully!!!
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={openError}
+        autoHideDuration={6000}
+        onClose={handleErrorClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleErrorClose} severity="error" sx={{ width: '100%' }}>
+          You are not authorised to perform this action!!!
         </Alert>
       </Snackbar>
       <Typography variant="h6" color={'gray'}>
