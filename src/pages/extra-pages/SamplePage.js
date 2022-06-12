@@ -66,7 +66,7 @@ const SamplePage = () => {
   const [appName, setAppName] = React.useState('');
   const [environment, setEnvironment] = React.useState('');
   const [region, setRegion] = React.useState('ap-south-1');
-  const [configType, setConfigType] = React.useState(CONFIG_TYPES.KEY_VALUE);
+  const [configType, setConfigType] = React.useState();
   const [configKey, setConfigKey] = React.useState('id');
   const [configVal, setConfigVal] = React.useState('1');
   const [configString, setConfigString] = React.useState('');
@@ -194,7 +194,7 @@ const SamplePage = () => {
     const response = {
       applicationName: appName,
       env: environment,
-      region,
+      region: environment === '*' ? '*' : region,
       createdBy: userDetails.username,
       // historyConfig: [], // Don't send for create.
       currentConfig: parseConfiguration(),
@@ -454,13 +454,13 @@ const SamplePage = () => {
             })}
           </Select>
         </FormControl>
-        {authUserDetails && authUserDetails.userType !== "ADMIN" &&
-        <FormControl sx={{ width: '150px' }}>
-          <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
-            Add Access
-          </Button>
-        </FormControl>
-}
+        {authUserDetails && authUserDetails.userType !== 'ADMIN' && (
+          <FormControl sx={{ width: '150px' }}>
+            <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
+              Add Access
+            </Button>
+          </FormControl>
+        )}
         {renderModal()}
       </div>
       <hr />
@@ -486,6 +486,7 @@ const SamplePage = () => {
             label="Environment"
             onChange={handleEnvironmentChange}
           >
+            <MenuItem value={'*'}>Common</MenuItem>
             <MenuItem value={'ftr'}>Feature</MenuItem>
             <MenuItem value={'qat'}>Testing</MenuItem>
             <MenuItem value={'prod'}>Production</MenuItem>

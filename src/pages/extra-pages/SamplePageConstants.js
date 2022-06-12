@@ -20,6 +20,7 @@ export const formStyle = {
 };
 
 export const AWS_REGIONS = [
+  { value: '*', label: 'Common (*)' },
   { value: 'ap-south-1', label: 'Asia Pacific(Mumbai) (ap-south-1)' },
   { value: 'ap-northeast-1', label: 'Asia Pacific(Tokyo) (ap-northeast-1)' },
   { value: 'ap-northeast-2', label: 'Asia Pacific(Seoul) (ap-northeast-2)' },
