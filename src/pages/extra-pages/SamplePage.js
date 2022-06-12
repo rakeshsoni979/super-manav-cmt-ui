@@ -431,13 +431,6 @@ const SamplePage = () => {
   };
 
   const renderAccessButton = () => {
-    if (
-      (authUserDetails && authUserDetails.userType !== 'ADMIN') ||
-      [...(authUserDetails.regionAccessList || []), '*'].includes(region)
-    ) {
-      return;
-    }
-
     return (
       <FormControl sx={{ width: '250px' }}>
         <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
