@@ -430,6 +430,23 @@ const SamplePage = () => {
     );
   };
 
+  const renderAccessButton = () => {
+    if (
+      (authUserDetails && authUserDetails.userType !== 'ADMIN') ||
+      [...(authUserDetails.regionAccessList || []), '*'].includes(region)
+    ) {
+      return;
+    }
+
+    return (
+      <FormControl sx={{ width: '250px' }}>
+        <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
+          Request Access
+        </Button>
+      </FormControl>
+    );
+  };
+
   return (
     <MainCard title="Configuration System">
       <div
@@ -454,13 +471,7 @@ const SamplePage = () => {
             })}
           </Select>
         </FormControl>
-        {authUserDetails && authUserDetails.userType !== 'ADMIN' && (
-          <FormControl sx={{ width: '150px' }}>
-            <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
-              Add Access
-            </Button>
-          </FormControl>
-        )}
+        {renderAccessButton()}
         {renderModal()}
       </div>
       <hr />
