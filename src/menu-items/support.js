@@ -27,7 +27,7 @@ const support = {
       type: 'item',
       url: '/version-page',
       icon: icons.ChromeOutlined,
-    },
+    }
   ],
 };
 

@@ -39,6 +39,7 @@ export const AWS_REGIONS = [
 export const API_BASE_URL = 'https://f817-2401-4900-1c3c-177-9cb-bd8a-7934-6474.in.ngrok.io';
 export const ACCESS_BASE_URL = 'https://f006-2409-4051-184-b0e7-69c4-3844-69ab-4876.in.ngrok.io';
 
+
 export const API_STATUS = {
   SUCCESS: 'success',
   FAIL: 'fail',
