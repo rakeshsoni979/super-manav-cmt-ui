@@ -42,10 +42,24 @@ import MuiAlert from '@mui/material/Alert';
 import { CONFIG_TYPES, formStyle, AWS_REGIONS } from './SamplePageConstants';
 import TabPanel from './tabPanel';
 import { saveConfig } from './api';
+import Modal from 'react-modal';
+import ShowReadCreatepopUp from '../../components/showPopUp/showReadCreatepopUp';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+Modal.setAppElement('#root');
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding: '30px',
+  },
+};
 
 const SamplePage = () => {
   const [appName, setAppName] = React.useState('');
@@ -60,6 +74,21 @@ const SamplePage = () => {
   const [configTabs, setConfigTabs] = React.useState([{ name: 'Config 1' }]);
 
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const [modalIsOpen, setIsOpen] = React.useState(false);
+
+  const openModal = () => {
+    setIsOpen(true);
+  }
+
+  function afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    // subtitle.style.color = '#f00';
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+  }
 
   // ===== ALERT STATES =======
 
@@ -377,10 +406,23 @@ const SamplePage = () => {
     );
   };
 
+  const renderModal = () => {
+    return (<Modal
+      isOpen={modalIsOpen}
+      onAfterOpen={afterOpenModal}
+      onRequestClose={closeModal}
+      style={customStyles}
+      contentLabel="Example Modal"
+    >
+      <ShowReadCreatepopUp closeModalPopUp={closeModal}></ShowReadCreatepopUp>
+    </Modal>);
+  }
+
   return (
     <MainCard title="Configuration System">
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+      <div style={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '10px' }}>
         <FormControl sx={{ width: '300px' }}>
+
           <InputLabel id="demo-simple-select-label">Region</InputLabel>
           <Select
             labelId="demo-simple-select-label"
@@ -399,6 +441,16 @@ const SamplePage = () => {
             })}
           </Select>
         </FormControl>
+        <FormControl sx={{ width: '150px' }}>
+          <Button
+            variant="contained"
+            endIcon={<AddCircleIcon />}
+            onClick={openModal}
+          >
+            Add Access
+          </Button>
+        </FormControl>
+        {renderModal()}
       </div>
       <hr />
       <Stack spacing={2}>
