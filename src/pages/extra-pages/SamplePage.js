@@ -44,6 +44,7 @@ import TabPanel from './tabPanel';
 import { saveConfig } from './api';
 import Modal from 'react-modal';
 import ShowUpdateDeletePopUp from '../../components/showPopUp/showUpdateDeletePopUp';
+import { useSelector } from 'react-redux';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -77,6 +78,8 @@ const SamplePage = () => {
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
 
   const [modalIsOpen, setIsOpen] = React.useState(false);
+  const auth = useSelector((state) => state.auth);
+  const { user: authUserDetails } = auth;
 
   React.useEffect(async () => {
     const userInfo = await Auth.currentAuthenticatedUser();
@@ -451,11 +454,13 @@ const SamplePage = () => {
             })}
           </Select>
         </FormControl>
+        {authUserDetails && authUserDetails.userType !== "ADMIN" &&
         <FormControl sx={{ width: '150px' }}>
           <Button variant="contained" endIcon={<AddCircleIcon />} onClick={openModal}>
             Add Access
           </Button>
         </FormControl>
+}
         {renderModal()}
       </div>
       <hr />
