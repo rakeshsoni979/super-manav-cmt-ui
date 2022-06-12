@@ -120,14 +120,16 @@ const DashboardDefault = ({ signOut }) => {
             Configuration List
           </Typography>
           <FormControl sx={{ width: "250px" }}>
-            <Button
-              variant="contained"
-              size="small"
-              endIcon={<AddCircleIcon />}
-              onClick={openModal}
-            >
-              Request Access
-            </Button>
+            {user && user.userType !== "ADMIN" && (
+              <Button
+                variant="contained"
+                size="small"
+                endIcon={<AddCircleIcon />}
+                onClick={openModal}
+              >
+                Request Access
+              </Button>
+            )}
           </FormControl>
         </div>
         <TableContainer component={Paper}>
